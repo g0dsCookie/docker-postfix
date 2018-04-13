@@ -1,4 +1,4 @@
-FROM alpine:3.7
+FROM alpine:edge
 
 ##### VERSIONS #####
 ARG MAJOR
@@ -21,18 +21,18 @@ COPY patches/* /tmp/patches/
 
 RUN set -eu \
     && apk add --no-cache --virtual .postfix-deps \
-        pcre \
-        perl \
+        pcre libpcrecpp libpcre16 libpcre32 \
         db \
         icu \
         openldap \
         lmdb \
-        mariadb-client-libs \
+        mariadb-connector-c \
         libnsl \
-        postgresql \
+        postgresql-libs \
         cyrus-sasl \
         sqlite-libs \
         libressl \
+        zlib \
     && apk add --no-cache --virtual .build-deps \
         gcc g++ \
         libc-dev rpcgen \
@@ -45,17 +45,18 @@ RUN set -eu \
         coreutils \
         linux-headers \
         pcre-dev \
-        perl-dev \
+        perl \
         db-dev \
         icu-dev \
         openldap-dev \
         lmdb-dev \
-        mariadb-dev \
+        mariadb-connector-c-dev \
         libnsl-dev \
         postgresql-dev \
         cyrus-sasl-dev \
         sqlite-dev \
         libressl-dev \
+        zlib-dev \
         bsd-compat-headers \
     && addgroup -S postfix && adduser -h /var/spool/postfix -H -s /sbin/nologin -S -g postfix postfix \
     && addgroup -S postdrop \
@@ -69,12 +70,12 @@ RUN set -eu \
     && make ${MAKEOPTS} CFLAGS="${CFLAGS}" shared \
     && make prefix=/usr install install-sharedlib \
     && cd "../postfix-${MAJOR}.${MINOR}.${PATCH}" \
-    && patch -p1 -i /tmp/patches/libressl.patch \
-    && make makefiles shared=yes dynamicmaps=no shlib_directory="/usr/lib/postfix/MAIL_VERSION" \
+    && for p in /tmp/patches/*.patch; do patch -p1 -i "${p}"; done \
+    && make makefiles shared=yes dynamicmaps=yes \
         DEBUG="" OPT="${CFLAGS}" \
-        CCARGS="-DHAS_PCRE -DHAS_LDAP -DHAS_MYSQL -I/usr/include/mysql -DHAS_PGSQL -I/usr/include/postgresql -DHAS_SQLITE -DUSE_TLS -DHAS_LMDB -DDEF_SASL_SERVER=\"dovecot\" -DUSE_LDAP_SASL -DUSE_SASL_AUTH -DUSE_CYRUS_SASL -I/usr/include/sasl -DHAS_CDB -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE" \
-        AUXLIBS="-ldl -lpcre -llmdb -lssl -lcrypto -lsasl2" AUXLIBS_CDB="-lcdb" \
-        AUXLIBS_LDAP="-lldap -llber" AUXLIBS_MYSQL="-lmysqlclient" \
+        CCARGS="-DHAS_SHL_LOAD -DDEF_DAEMON_DIR=\\\"/usr/lib/postfix\\\" -DHAS_PCRE $(pcre-config --cflags) -DHAS_LDAP -DHAS_MYSQL $(mysql_config --cflags) -DHAS_PGSQL -I/usr/include/postgresql -DHAS_SQLITE -DUSE_TLS -DHAS_LMDB -DDEF_SASL_SERVER=\\\"dovecot\\\" -DUSE_LDAP_SASL -DUSE_SASL_AUTH -DUSE_CYRUS_SASL -I/usr/include/sasl -DHAS_CDB -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE" \
+        AUXLIBS="-ldl $(pcre-config --libs) -llmdb -lssl -lcrypto -lsasl2" AUXLIBS_CDB="-lcdb" \
+        AUXLIBS_LDAP="-lldap -llber" AUXLIBS_MYSQL="$(mysql_config --libs)" \
         AUXLIBS_PGSQL="-L/usr/lib/postgresql -lpq" AUXLIBS_SQLITE="-lsqlite3 -lpthread" \
         AUXLIBS_LMDB="-llmdb -lpthread" \
     && make ${MAKEOPTS} \
