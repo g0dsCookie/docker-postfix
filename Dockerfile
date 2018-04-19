@@ -79,10 +79,12 @@ RUN set -eu \
         AUXLIBS_PGSQL="-L/usr/lib/postgresql -lpq" AUXLIBS_SQLITE="-lsqlite3 -lpthread" \
         AUXLIBS_LMDB="-llmdb -lpthread" \
     && make ${MAKEOPTS} \
+    && mkdir /conf \
+    && ln -s /conf /etc/postfix \
     && LD_LIBRARY_PATH="lib" sh postfix-install \
         -non-interactive \
         install_root="/" \
-        config_directory="/conf" \
+        config_directory="/etc/postfix" \
         manpage_directory="/usr/share/man" \
         command_directory="/usr/sbin" \
         mailq_path="/usr/bin/mailq" \
@@ -96,4 +98,4 @@ EXPOSE 25 587
 
 VOLUME [ "/queue", "/conf", "/certificates" ]
 
-ENTRYPOINT [ "/usr/sbin/postfix", "start-fg" ]
+ENTRYPOINT [ "/usr/sbin/postfix", "start-fg", "-c", "/conf" ]
