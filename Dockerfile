@@ -82,7 +82,7 @@ RUN set -eu \
     && LD_LIBRARY_PATH="lib" sh postfix-install \
         -non-interactive \
         install_root="/" \
-        config_directory="/etc/postfix" \
+        config_directory="/conf" \
         manpage_directory="/usr/share/man" \
         command_directory="/usr/sbin" \
         mailq_path="/usr/bin/mailq" \
@@ -90,10 +90,10 @@ RUN set -eu \
         sendmail_path="/usr/sbin/sendmail" \
     && cd && rm -r "${BDIR}" "/tmp/patches" \
     && apk del .build-deps \
-    && mkdir /queue
+    && mkdir /queue /certificates
 
 EXPOSE 25 587
 
-VOLUME [ "/queue", "/etc/postfix" ]
+VOLUME [ "/queue", "/conf", "/certificates" ]
 
 ENTRYPOINT [ "/usr/sbin/postfix", "start-fg" ]
