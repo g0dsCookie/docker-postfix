@@ -1,4 +1,4 @@
-# dovecot image
+# postfix image
 
 This image provides an *unofficial* dockerized postfix image.
 
