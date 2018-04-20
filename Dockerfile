@@ -1,26 +1,8 @@
 FROM alpine:edge
 
-##### VERSIONS #####
-ARG MAJOR
-ARG MINOR
-ARG PATCH
-
-ARG CDB_VERSION="0.78"
-##### VERSIONS #####
-
-##### CONFIGURATIONS #####
-ARG MAKEOPTS="-j1"
-ARG CFLAGS="-O2"
-##### CONFIGURATIONS #####
-
-LABEL maintainer="g0dsCookie <g0dscookie@cookieprojects.de>" \
-      version="${MAJOR}.${MINOR}.${PATCH}" \
-      description="A fast and secure drop-in replacement for sendmail"
-
 COPY patches/* /tmp/patches/
 
-RUN set -eu \
-    && apk add --no-cache --virtual .postfix-deps \
+RUN apk add --no-cache --virtual .postfix-deps \
         pcre libpcrecpp libpcre16 libpcre32 \
         db \
         icu \
@@ -33,6 +15,49 @@ RUN set -eu \
         sqlite-libs \
         libressl \
         zlib \
+ && addgroup -S postfix && adduser -h /var/spool/postfix -H -s /sbin/nologin -S -g postfix postfix \
+ && addgroup -S postdrop
+
+##### CONFIGURATIONS #####
+ARG MAKEOPTS="-j1"
+ARG CFLAGS="-O2"
+##### CONFIGURATIONS #####
+
+##### CDB VERSION #####
+ARG CDB_VERSION="0.78"
+##### CDB VERSION #####
+
+RUN set -eu \
+ && apk add --no-cache --virtual .build-deps \
+        gcc g++ \
+        libc-dev rpcgen \
+        make \
+        tar \
+        gzip \
+        wget \
+        linux-headers \
+ && BDIR="$(mktemp -d)" \
+ && cd "${BDIR}" \
+ && wget -qO - "http://www.corpit.ru/mjt/tinycdb/tinycdb-${CDB_VERSION}.tar.gz" |\
+        tar -xzf - \
+ && cd "tinycdb-${CDB_VERSION}" \
+ && make ${MAKEOPTS} CFLAGS="${CFLAGS}" shared \
+ && make prefix=/usr install install-sharedlib \
+ && cd \
+ && rm -r "${BDIR}" \
+ && apk del .build-deps
+
+##### VERSIONS #####
+ARG MAJOR
+ARG MINOR
+ARG PATCH
+##### VERSIONS #####
+
+LABEL maintainer="g0dsCookie <g0dscookie@cookieprojects.de>" \
+      version="${MAJOR}.${MINOR}.${PATCH}" \
+      description="A fast and secure drop-in replacement for sendmail"
+
+RUN set -eu \
     && apk add --no-cache --virtual .build-deps \
         gcc g++ \
         libc-dev rpcgen \
@@ -58,18 +83,11 @@ RUN set -eu \
         libressl-dev \
         zlib-dev \
         bsd-compat-headers \
-    && addgroup -S postfix && adduser -h /var/spool/postfix -H -s /sbin/nologin -S -g postfix postfix \
-    && addgroup -S postdrop \
     && BDIR="$(mktemp -d)" \
     && cd "${BDIR}" \
-    && wget -qO - "http://www.corpit.ru/mjt/tinycdb/tinycdb-${CDB_VERSION}.tar.gz" |\
-        tar -xzf - \
     && wget -qO - "http://cdn.postfix.johnriley.me/mirrors/postfix-release/official/postfix-${MAJOR}.${MINOR}.${PATCH}.tar.gz" |\
         tar -xzf - \
-    && cd "tinycdb-${CDB_VERSION}" \
-    && make ${MAKEOPTS} CFLAGS="${CFLAGS}" shared \
-    && make prefix=/usr install install-sharedlib \
-    && cd "../postfix-${MAJOR}.${MINOR}.${PATCH}" \
+    && cd "postfix-${MAJOR}.${MINOR}.${PATCH}" \
     && for p in /tmp/patches/*.patch; do patch -p1 -i "${p}"; done \
     && make makefiles shared=yes dynamicmaps=yes \
         DEBUG="" OPT="${CFLAGS}" \
