@@ -1,7 +1,5 @@
 FROM alpine:edge
 
-COPY patches/* /tmp/patches/
-
 RUN apk add --no-cache --virtual .postfix-deps \
         pcre libpcrecpp libpcre16 libpcre32 \
         db \
@@ -15,6 +13,9 @@ RUN apk add --no-cache --virtual .postfix-deps \
         sqlite-libs \
         libressl \
         zlib \
+        bash \
+        diffutils \
+        rsync \
  && addgroup -S postfix && adduser -h /var/spool/postfix -H -s /sbin/nologin -S -g postfix postfix \
  && addgroup -S postdrop
 
@@ -56,6 +57,8 @@ ARG PATCH
 LABEL maintainer="g0dsCookie <g0dscookie@cookieprojects.de>" \
       version="${MAJOR}.${MINOR}.${PATCH}" \
       description="A fast and secure drop-in replacement for sendmail"
+
+COPY patches/* /tmp/patches/
 
 RUN set -eu \
  && apk add --no-cache --virtual .build-deps \
@@ -110,10 +113,17 @@ RUN set -eu \
         sendmail_path="/usr/sbin/sendmail" \
  && cd && rm -r "${BDIR}" "/tmp/patches" \
  && apk del .build-deps \
- && mkdir /queue /certificates
+ && mkdir /queue /certificates /conf.def \
+ && for i in dynamicmaps.cf dynamicmaps.cf.d/ main.cf.default main.cf.proto makedefs.out master.cf.proto postfix-files postfix-files.d/; do \
+        cp -R "/conf/${i}" "/conf.def/${i}"; \
+    done
+
+COPY content/ /
+
+ENV INIT_CONF="false"
 
 EXPOSE 25 587
 
 VOLUME [ "/queue", "/conf", "/certificates" ]
 
-ENTRYPOINT [ "/usr/sbin/postfix", "start-fg", "-c", "/conf" ]
+ENTRYPOINT [ "/docker-entrypoint.sh", "/usr/sbin/postfix", "start-fg", "-c", "/conf" ]

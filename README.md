@@ -33,7 +33,7 @@ This image provides an *unofficial* dockerized postfix image.
 This container uses postfix default configuration.
 
 Please note that you should not override the following files.
-If you want to mount a directory to **/etc/postfix** remember to copy those first.
+If you want to mount a directory to **/conf** remember to copy those first.
 Paths ending with a */* are directories.
 
 * dynamicmaps.cf
@@ -45,13 +45,22 @@ Paths ending with a */* are directories.
 * postfix-files
 * postfix-files.d/
 
-If you don't copy/keep these files, you will break things.
+You will break changes if these files aren't the exact same as in the container.
+
+To give you some more comfort I've created a simple script which will copy over above files if they have changed.
+This script will store a backup with current timestamp in the /conf folder, so you don't lose data.
+It will also only copy/overwrite files mentioned above.
+
+To use this feature you have to set the environment variable **INIT_CONF** to **true** and mount your config directory **read-write**.
+If **INIT_CONF** is set to **false**, the script will skip any overwrites and will just start postfix.
+
+`docker run -d --name my-postfix -v /my/conf:/conf --env INIT_CONF=true g0dscookie/postfix`
 
 ### Use custom container
 
 ```Dockerfile
 FROM g0dscookie/postfix
-COPY config/ /etc/postfix/
+COPY config/ /conf/
 ```
 
 Now build your container with `$ docker build -t my-postfix .`.
@@ -60,7 +69,7 @@ Note: Do not override the files mentioned above.
 
 ### Use bind mounts
 
-`$ docker run -d --name my-postfix -v /path/to/config:/conf:ro -v /my/certificates:/certificates:ro -v /path/to/queue:/queue g0dscookie/postfix`
+`$ docker run -d --name my-postfix -v /path/to/config:/conf -v /my/certificates:/certificates:ro -v /path/to/queue:/queue g0dscookie/postfix`
 
 Note that **/path/to/config** is a directory.
 
