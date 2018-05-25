@@ -19,6 +19,9 @@ tag = "{}/{}".format(prefix, service)
 
 versions = {
     "3.3.0": {
+        "latest": False,
+    },
+    "3.3.1": {
         "latest": True,
     },
 }
