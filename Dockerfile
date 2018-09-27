@@ -92,20 +92,20 @@ RUN set -eu \
         tar -xzf - \
  && cd "postfix-${MAJOR}.${MINOR}.${PATCH}" \
  && for p in /tmp/patches/*.patch; do patch -p1 -i "${p}"; done \
- && make makefiles shared=yes dynamicmaps=yes \
+ && make makefiles shared=yes dynamicmaps=no \
+ 	shlib_directory="/usr/lib/postfix/MAIL_VERSION" \
+	meta_directory="/usr/share/postfix" \
         DEBUG="" OPT="${CFLAGS}" \
-        CCARGS="-DHAS_SHL_LOAD -DDEF_DAEMON_DIR=\\\"/usr/lib/postfix\\\" -DHAS_PCRE $(pcre-config --cflags) -DHAS_LDAP -DHAS_MYSQL $(mysql_config --cflags) -DHAS_PGSQL -I/usr/include/postgresql -DHAS_SQLITE -DUSE_TLS -DHAS_LMDB -DDEF_SASL_SERVER=\\\"dovecot\\\" -DUSE_LDAP_SASL -DUSE_SASL_AUTH -DUSE_CYRUS_SASL -I/usr/include/sasl -DHAS_CDB -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE" \
+        CCARGS="-DHAS_SHL_LOAD -DDEF_DAEMON_DIR=\\\"/usr/libexec/postfix\\\" -DHAS_PCRE $(pcre-config --cflags) -DHAS_LDAP -DHAS_MYSQL $(mysql_config --cflags) -DHAS_PGSQL -I/usr/include/postgresql -DHAS_SQLITE -DUSE_TLS -DHAS_LMDB -DDEF_SASL_SERVER=\\\"dovecot\\\" -DUSE_LDAP_SASL -DUSE_SASL_AUTH -DUSE_CYRUS_SASL -I/usr/include/sasl -DHAS_CDB -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE" \
         AUXLIBS="-ldl $(pcre-config --libs) -llmdb -lssl -lcrypto -lsasl2" AUXLIBS_CDB="-lcdb" \
         AUXLIBS_LDAP="-lldap -llber" AUXLIBS_MYSQL="$(mysql_config --libs)" \
         AUXLIBS_PGSQL="-L/usr/lib/postgresql -lpq" AUXLIBS_SQLITE="-lsqlite3 -lpthread" \
         AUXLIBS_LMDB="-llmdb -lpthread" \
  && make ${MAKEOPTS} \
- && mkdir /conf \
- && ln -s /conf /etc/postfix \
  && LD_LIBRARY_PATH="lib" sh postfix-install \
         -non-interactive \
         install_root="/" \
-        config_directory="/conf" \
+        config_directory="/etc/postfix" \
         manpage_directory="/usr/share/man" \
         command_directory="/usr/sbin" \
         mailq_path="/usr/bin/mailq" \
@@ -113,10 +113,7 @@ RUN set -eu \
         sendmail_path="/usr/sbin/sendmail" \
  && cd && rm -r "${BDIR}" "/tmp/patches" \
  && apk del .build-deps \
- && mkdir /queue /certificates /conf.def \
- && for i in dynamicmaps.cf dynamicmaps.cf.d/ main.cf.default main.cf.proto makedefs.out master.cf.proto postfix-files postfix-files.d/; do \
-        cp -R "/conf/${i}" "/conf.def/${i}"; \
-    done
+ && mkdir /queue /certificates
 
 COPY content/ /
 
@@ -124,6 +121,6 @@ ENV INIT_CONF="false"
 
 EXPOSE 25 587
 
-VOLUME [ "/queue", "/conf", "/certificates" ]
+VOLUME [ "/queue", "/etc/postfix", "/certificates" ]
 
-ENTRYPOINT [ "/docker-entrypoint.sh", "/usr/sbin/postfix", "start-fg", "-c", "/conf" ]
+ENTRYPOINT [ "/docker-entrypoint.sh", "/usr/sbin/postfix", "start-fg" ]
