@@ -1,21 +1,28 @@
-MOPTS			?= -j1
-CFLAGS			?= -O2
-CPPFLAGS		?= -O2
+MAJOR			?=
+MINOR			?=
+PATCH			?=
 
-VERSION			?= latest
+TAG		= g0dscookie/postfix
+TAGLIST	= -t ${TAG}:${MAJOR} -t ${TAG}:${MAJOR}.${MINOR} -t ${TAG}:${MAJOR}.${MINOR}.${PATCH}
+BUILDARGS = --build-arg MAJOR=${MAJOR} --build-arg MINOR=${MINOR} --build-arg PATCH=${PATCH}
 
-USERNAME		?= g0dscookie
-SERVICE			?= postfix
-TAG				= $(USERNAME)/$(SERVICE)
+.PHONY: nothing
+nothing:
+	@echo "No job given."
+	@exit 1
 
-.PHONY: build
-build:
-	MAKEOPTS="$(MOPTS)" CFLAGS="$(CFLAGS)" CPPFLAGS="$(CPPFLAGS)" ./build.py --debug --version $(VERSION)
+.PHONY: alpine3.9
+alpine3.9:
+	docker build ${BUILDARGS} ${TAGLIST} alpine3.9
 
-.PHONE: build-all
-build-all:
-	MAKEOPTS="$(MOPTS)" CFLAGS="$(CFLAGS)" CPPFLAGS="$(CPPFLAGS)" ./build.py --debug --version all
+.PHONY: alpine3.9-latest
+alpine3.9-latest:
+	docker build ${BUILDARGS} -t ${TAG}:latest ${TAGLIST} alpine3.9
+
+.PHONY: clean
+clean:
+	docker rmi -f $(shell docker images -aq ${TAG})
 
 .PHONY: push
 push:
-	docker push $(TAG)
+	docker push ${TAG}
