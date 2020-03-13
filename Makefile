@@ -1,28 +1,33 @@
-MAJOR			?=
-MINOR			?=
-PATCH			?=
+MAJOR			?= 3
+MINOR			?= 4
+PATCH			?= 10
 
 TAG		= g0dscookie/postfix
-TAGLIST	= -t ${TAG}:${MAJOR} -t ${TAG}:${MAJOR}.${MINOR} -t ${TAG}:${MAJOR}.${MINOR}.${PATCH}
-BUILDARGS = --build-arg MAJOR=${MAJOR} --build-arg MINOR=${MINOR} --build-arg PATCH=${PATCH}
+TAGLIST		= -t ${TAG}:${MAJOR} -t ${TAG}:${MAJOR}.${MINOR} -t ${TAG}:${MAJOR}.${MINOR}.${PATCH}
+BUILDARGS	= --build-arg MAJOR=${MAJOR} --build-arg MINOR=${MINOR} --build-arg PATCH=${PATCH}
 
-.PHONY: nothing
-nothing:
-	@echo "No job given."
-	@exit 1
+PLATFORM_FLAGS	= --platform linux/amd64 --platform linux/arm64 --platform linux/arm/v6
+PUSH		?= --push
 
-.PHONY: alpine3.9
-alpine3.9:
-	docker build ${BUILDARGS} ${TAGLIST} alpine3.9
+build:
+	docker buildx build ${PUSH} ${PLATFORM_FLAGS} ${BUILDARGS} ${TAGLIST} alpine3.10
 
-.PHONY: alpine3.9-latest
-alpine3.9-latest:
-	docker build ${BUILDARGS} -t ${TAG}:latest ${TAGLIST} alpine3.9
+latest: TAGLIST := -t ${TAG}:latest ${TAGLIST}
+latest: build
 
-.PHONY: clean
-clean:
-	docker rmi -f $(shell docker images -aq ${TAG})
+amd64: PLATFORM_FLAGS := --platform linux/amd64
+amd64: build
+amd64-latest: TAGLIST := -t ${TAG}:latest ${TAGLIST}
+amd64-latest: amd64
 
-.PHONY: push
-push:
-	docker push ${TAG}
+arm64: PLATFORM_FLAGS := --platform linux/arm64
+arm64: build
+arm64-latest: TAGLIST := -t ${TAG}:latest ${TAGLIST}
+arm64-latest: arm64
+
+arm: PLATFORM_FLAGS := --platform linux/arm
+arm: build
+arm-latest: TAGLIST := -t ${TAG}:latest ${TAGLIST}
+arm-latest: arm
+
+.PHONY: build latest amd64 amd64-latest arm arm-latest arm64 arm64-latest
