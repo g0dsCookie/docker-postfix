@@ -1,6 +1,6 @@
 MAJOR			?= 3
-MINOR			?= 4
-PATCH			?= 10
+MINOR			?= 5
+PATCH			?= 0
 
 TAG		= g0dscookie/postfix
 TAGLIST		= -t ${TAG}:${MAJOR} -t ${TAG}:${MAJOR}.${MINOR} -t ${TAG}:${MAJOR}.${MINOR}.${PATCH}
@@ -10,7 +10,7 @@ PLATFORM_FLAGS	= --platform linux/amd64 --platform linux/arm64 --platform linux/
 PUSH		?= --push
 
 build:
-	docker buildx build ${PUSH} ${PLATFORM_FLAGS} ${BUILDARGS} ${TAGLIST} alpine3.10
+	docker buildx build ${PUSH} ${PLATFORM_FLAGS} ${BUILDARGS} ${TAGLIST} .
 
 latest: TAGLIST := -t ${TAG}:latest ${TAGLIST}
 latest: build
