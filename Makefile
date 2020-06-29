@@ -1,6 +1,6 @@
 MAJOR	?= 3
 MINOR	?= 5
-PATCH	?= 3
+PATCH	?= 4
 
 TAG	= g0dscookie/postfix
 TAGLIST = -t ${TAG}:${MAJOR} -t ${TAG}:${MAJOR}.${MINOR} -t ${TAG}:${MAJOR}.${MINOR}.${PATCH}
