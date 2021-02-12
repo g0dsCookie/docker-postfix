@@ -1,12 +1,12 @@
 MAJOR	?= 3
 MINOR	?= 5
-PATCH	?= 6
+PATCH	?= 9
 
 TAG	= g0dscookie/postfix
 TAGLIST = -t ${TAG}:${MAJOR} -t ${TAG}:${MAJOR}.${MINOR} -t ${TAG}:${MAJOR}.${MINOR}.${PATCH}
 BUILDARGS = --build-arg MAJOR=${MAJOR} --build-arg MINOR=${MINOR} --build-arg PATCH=${PATCH}
 
-PLATFORM_FLAGS	= --platform linux/amd64 --platform linux/386 --platform linux/arm64 --platform linux/arm/v6 --platform linux/arm/v7
+PLATFORM_FLAGS	= --platform linux/amd64 --platform linux/arm64 --platform linux/arm/v6 --platform linux/arm/v7
 
 build:
 	docker buildx build --push ${PLATFORM_FLAGS} ${BUILDARGS} ${TAGLIST} .
@@ -20,12 +20,6 @@ amd64: build
 amd64-latest: TAGLIST := -t ${TAG}:latest ${TAGLIST}
 amd64-latest: amd64
 .PHONY: amd64 amd64-latest
-
-i386: PLATFORM_FLAGS := --platform linux/386
-i386: build
-i386-latest: TAGLIST := -t ${TAG}:latest ${TAGLIST}
-i386-latest: i386
-.PHONY: i386 i386-latest
 
 arm64: PLATFORM_FLAGS := --platform linux/arm64
 arm64: build

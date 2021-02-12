@@ -1,4 +1,4 @@
-FROM alpine:3.11
+FROM alpine:3
 
 LABEL maintainer="g0dsCookie <g0dscookie@cookieprojects.de>" \
       description="A fast and secure drop-in replacement for sendmail"
