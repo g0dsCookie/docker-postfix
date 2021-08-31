@@ -1,4 +1,4 @@
-FROM debian:10
+FROM debian:11
 
 ARG MAJOR
 ARG MINOR
@@ -23,12 +23,12 @@ RUN set -eu \
  && apt-get install -qqy \
      build-essential curl gnupg pkg-config \
      libmagic-dev libpcre3-dev perl libdb-dev \
-     libicu-dev libldap2-dev liblmdb-dev libmariadbclient-dev libmariadb-dev-compat \
+     libicu-dev libldap2-dev liblmdb-dev libmariadb-dev libmariadb-dev-compat \
      libpq-dev libsasl2-dev libsqlite3-dev \
      libssl-dev zlib1g-dev libcdb-dev m4 \
  && apt-get install -qqy \
      libmagic1 libpcre3 libdb5.3 \
-     libicu63 libldap-2.4-2 liblmdb0 libmariadb3 \
+     libicu67 libldap-2.4-2 liblmdb0 libmariadb3 \
      libpq5 libsasl2-2 libsqlite3-0 \
      openssl zlib1g tinycdb \
  && cecho "### DOWNLOADING POSTFIX ###" \
