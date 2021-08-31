@@ -1,15 +1,16 @@
 MAJOR	?= 3
-MINOR	?= 5
-PATCH	?= 9
+MINOR	?= 6
+PATCH	?= 2
 
 TAG	= g0dscookie/postfix
 TAGLIST = -t ${TAG}:${MAJOR} -t ${TAG}:${MAJOR}.${MINOR} -t ${TAG}:${MAJOR}.${MINOR}.${PATCH}
 BUILDARGS = --build-arg MAJOR=${MAJOR} --build-arg MINOR=${MINOR} --build-arg PATCH=${PATCH}
 
-PLATFORM_FLAGS	= --platform linux/amd64 --platform linux/arm64 --platform linux/arm/v6 --platform linux/arm/v7
+PLATFORM_FLAGS	= --platform linux/amd64 --platform linux/arm64
+PUSH ?= --push
 
 build:
-	docker buildx build --push ${PLATFORM_FLAGS} ${BUILDARGS} ${TAGLIST} .
+	docker buildx build ${PUSH} ${PLATFORM_FLAGS} ${BUILDARGS} ${TAGLIST} .
 
 latest: TAGLIST := -t ${TAG}:latest ${TAGLIST}
 latest: build
@@ -26,15 +27,3 @@ arm64: build
 arm64-latest: TAGLIST := -t ${TAG}:latest ${TAGLIST}
 arm64-latest: arm64
 .PHONY: arm64 arm64-latest
-
-armv6: PLATFORM_FLAGS := --platform linux/arm/v6
-armv6: build
-armv6-latest: TAGLIST := -t ${TAG}:latest ${TAGLIST}
-armv6-latest: armv6
-.PHONY: armv6 armv6-latest
-
-armv7: PLATFORM_FLAGS := --platform linux/arm/v7
-armv7: build
-armv7-latest: TAGLIST := -t ${TAG}:latest ${TAGLIST}
-armv7-latest: armv7
-.PHONY: armv7 armv7-latest
