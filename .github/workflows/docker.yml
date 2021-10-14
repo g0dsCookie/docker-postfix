@@ -27,10 +27,10 @@ jobs:
 
       - name: Set version
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+          if [[ "${GITHUB_REF#refs/heads/}" == "master" ]]; then
             echo "POSTFIX_VERSION=${{ steps.keydb.outputs.release }}" >>${GITHUB_ENV}
           else
-            echo "POSTFIX_VERSION=${{ github.ref }}" >>${GITHUB_ENV}
+            echo "POSTFIX_VERSION=${GITHUB_REF#refs/tags/}" >>${GITHUB_ENV}
           fi
 
       - name: Setup docker metadata
