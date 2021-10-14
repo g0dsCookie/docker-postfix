@@ -1,19 +1,21 @@
-FROM debian:11
+ARG DEBIAN_VERSION=11
+FROM debian:${DEBIAN_VERSION}
 
-ARG MAJOR
-ARG MINOR
-ARG PATCH
+ARG POSTFIX_VERSION
 
 LABEL maintainer="g0dsCookie <g0dscookie@cookieprojects.de>" \
       description="A fast and secure drop-in replacement for sendmail" \
-      version="${MAJOR}.${MINOR}.${PATCH}"
+      version="${POSTFIX_VERSION}"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN set -eu \
+ && POSTFIX_VERSION="$(echo ${POSTFIX_VERSION} | sed 's/^v//')" \
+ && echo "${POSTFIX_VERSION}" >ver \
+ && IFS='.' read MAJOR MINOR PATCH <ver && rm -f ver \
  && cecho() { echo "\033[1;32m$1\033[0m"; } \
  && cecho "### PREPARE ENVIRONMENT ###" \
- && TMP="$(mktemp -d)" && PV="${MAJOR}.${MINOR}.${PATCH}" && S="${TMP}/postfix-${PV}" \
+ && TMP="$(mktemp -d)" && PV="${POSTFIX_VERSION}" && S="${TMP}/postfix-${PV}" \
  && useradd -d /var/spool/postfix -M -s /sbin/nologin -r postfix \
  && groupadd -r postdrop \
  && mkdir /var/spool/postfix \
