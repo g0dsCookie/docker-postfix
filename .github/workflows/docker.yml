@@ -28,7 +28,7 @@ jobs:
       - name: Set version
         run: |
           if [[ "${GITHUB_REF#refs/heads/}" == "master" ]]; then
-            echo "POSTFIX_VERSION=${{ steps.keydb.outputs.release }}" >>${GITHUB_ENV}
+            echo "POSTFIX_VERSION=${{ steps.reporelease.outputs.release }}" >>${GITHUB_ENV}
           else
             echo "POSTFIX_VERSION=${GITHUB_REF#refs/tags/}" >>${GITHUB_ENV}
           fi
